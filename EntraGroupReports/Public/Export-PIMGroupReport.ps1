@@ -384,7 +384,8 @@ function Export-PIMGroupReport {
             $groupIndex = 0
             foreach ($group in $groupsToProcess) {
                 $groupIndex++
-                Write-Progress -Activity "Processing PIM Groups" -Status "Group $groupIndex of $($groupsToProcess.Count): $($group.DisplayName ?? $group.Id)" -PercentComplete (($groupIndex / $groupsToProcess.Count) * 100)
+                $groupName = if ($group.DisplayName) { $group.DisplayName } else { $group.Id }
+                Write-Progress -Activity "Processing PIM Groups" -Status "Group $groupIndex of $($groupsToProcess.Count): $groupName" -PercentComplete (($groupIndex / $groupsToProcess.Count) * 100)
 
                 # Get full PIM data for the group
                 try {

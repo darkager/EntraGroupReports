@@ -3,7 +3,7 @@
     RootModule        = 'EntraGroupReports.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '1.1.0'
+    ModuleVersion     = '1.2.0'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Core', 'Desktop')
@@ -86,6 +86,12 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = @'
+## Version 1.2.0
+- Renamed module from GraphPIMGroups to EntraGroupReports
+- Added MembershipType column to summary report (Assigned, DynamicUser, DynamicDevice)
+- Fixed PowerShell 5.1 compatibility (removed null-coalescing operator)
+- Added README.md documentation
+
 ## Version 1.1.0
 - Added Get-GroupDirectoryRoles: Retrieve directory role assignments for role-assignable groups
 - Added Export-EntraGroupReport: Generate comprehensive security reports for all Entra ID groups
