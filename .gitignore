@@ -1,0 +1,24 @@
+# PowerShell module build artifacts
+*.zip
+*.nupkg
+
+# IDE/Editor
+.vscode/
+*.code-workspace
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Generated reports (user-generated output)
+*-Summary.csv
+*-Report.csv
+*Report_*.csv
+
+# Claude
+.claude/
+claude.md
+research.md
+
+# Misc
+.data/
