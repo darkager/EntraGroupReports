@@ -3,7 +3,7 @@
     RootModule        = 'EntraGroupReports.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '1.2.0'
+    ModuleVersion     = '1.2.1'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Core', 'Desktop')
@@ -86,6 +86,9 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = @'
+## Version 1.2.1
+- Initial public release to GitHub
+
 ## Version 1.2.0
 - Renamed module from GraphPIMGroups to EntraGroupReports
 - Added MembershipType column to summary report (Assigned, DynamicUser, DynamicDevice)

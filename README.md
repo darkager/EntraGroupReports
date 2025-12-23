@@ -161,6 +161,33 @@ Get-PIMGroupAssignment -GroupId "12345678-1234-1234-1234-123456789012"
 - Role-assignable groups (`IsAssignableToRole = $true`) are required for directory role assignments.
 - PIM-enabled groups are groups that have been onboarded to Privileged Identity Management for Groups.
 
+## Changelog
+
+### Version 1.2.1
+- Initial public release to GitHub
+
+### Version 1.2.0
+- Renamed module from GraphPIMGroups to EntraGroupReports
+- Added MembershipType column to summary report (Assigned, DynamicUser, DynamicDevice)
+- Fixed PowerShell 5.1 compatibility (removed null-coalescing operator)
+- Added README.md documentation
+
+### Version 1.1.0
+- Added Get-GroupDirectoryRoles: Retrieve directory role assignments for role-assignable groups
+- Added Export-EntraGroupReport: Generate comprehensive security reports for all Entra ID groups
+  - Summary report with counts (members, owners, directory roles, PIM eligibility/assignments)
+  - Detail report with flattened data (Membership, DirectoryRole, PIMAccess record categories)
+  - Supports transitive group member expansion
+
+### Version 1.0.0
+- Initial release
+- Get-PIMGroupEligibility: Retrieve eligibility schedules and instances for PIM groups
+- Get-PIMGroupAssignment: Retrieve assignment schedules and instances for PIM groups
+- Get-PIMGroup: Composite function for retrieving full PIM data for a single group
+- Get-PIMGroups: List all PIM-enabled groups using the new identityGovernance API (Global cloud only)
+- Get-PIMGroupsLegacy: List all PIM-enabled groups using the legacy privilegedAccess API (deprecated Oct 2026)
+- Export-PIMGroupReport: Generate comprehensive CSV report of all PIM group data with resolved principal names
+
 ## License
 
 MIT License
