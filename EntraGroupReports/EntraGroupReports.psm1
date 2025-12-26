@@ -1,4 +1,4 @@
-#Requires -Modules Microsoft.Graph.Beta.Identity.Governance, Microsoft.Graph.Beta.Groups, Microsoft.Graph.Beta.Users, Microsoft.Graph.Identity.Governance
+#Requires -Modules Microsoft.Graph.Authentication, Microsoft.Graph.Beta.Applications, Microsoft.Graph.Beta.Groups, Microsoft.Graph.Beta.Identity.Governance, Microsoft.Graph.Beta.Users, Microsoft.Graph.Identity.Governance
 
 <#
 .SYNOPSIS
@@ -22,8 +22,10 @@
 
 .NOTES
     Author: EntraGroupReports Project
-    Requires: Microsoft.Graph.Beta.Identity.Governance
+    Requires: Microsoft.Graph.Authentication
+    Requires: Microsoft.Graph.Beta.Applications
     Requires: Microsoft.Graph.Beta.Groups
+    Requires: Microsoft.Graph.Beta.Identity.Governance
     Requires: Microsoft.Graph.Beta.Users
     Requires: Microsoft.Graph.Identity.Governance
 

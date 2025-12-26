@@ -3,7 +3,7 @@
     RootModule        = 'EntraGroupReports.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '1.2.2'
+    ModuleVersion     = '1.2.3'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Core', 'Desktop')
@@ -28,8 +28,10 @@
 
     # Modules that must be imported into the global environment prior to importing this module
     RequiredModules   = @(
-        @{ ModuleName = 'Microsoft.Graph.Beta.Identity.Governance'; ModuleVersion = '2.0.0' }
+        @{ ModuleName = 'Microsoft.Graph.Authentication'; ModuleVersion = '2.0.0' }
+        @{ ModuleName = 'Microsoft.Graph.Beta.Applications'; ModuleVersion = '2.0.0' }
         @{ ModuleName = 'Microsoft.Graph.Beta.Groups'; ModuleVersion = '2.0.0' }
+        @{ ModuleName = 'Microsoft.Graph.Beta.Identity.Governance'; ModuleVersion = '2.0.0' }
         @{ ModuleName = 'Microsoft.Graph.Beta.Users'; ModuleVersion = '2.0.0' }
         @{ ModuleName = 'Microsoft.Graph.Identity.Governance'; ModuleVersion = '2.0.0' }
     )
@@ -86,6 +88,10 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = @'
+## Version 1.2.3
+- Added missing module dependencies: Microsoft.Graph.Authentication, Microsoft.Graph.Beta.Applications
+  - Required for Invoke-MgGraphRequest and Get-MgBetaServicePrincipal cmdlets
+
 ## Version 1.2.2
 - Performance improvement: Replaced generic arrays and hashtables with strongly-typed generic collections
   - Lists use System.Collections.Generic.List[T] instead of @() arrays

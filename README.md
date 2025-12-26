@@ -6,8 +6,10 @@ PowerShell module for reporting on Microsoft Entra ID groups. Provides functions
 
 - PowerShell 5.1 or later (PowerShell 7+ recommended)
 - Microsoft Graph PowerShell SDK modules:
-  - `Microsoft.Graph.Beta.Identity.Governance`
+  - `Microsoft.Graph.Authentication`
+  - `Microsoft.Graph.Beta.Applications`
   - `Microsoft.Graph.Beta.Groups`
+  - `Microsoft.Graph.Beta.Identity.Governance`
   - `Microsoft.Graph.Beta.Users`
   - `Microsoft.Graph.Identity.Governance`
 
@@ -16,8 +18,10 @@ PowerShell module for reporting on Microsoft Entra ID groups. Provides functions
 1. Install the required Microsoft Graph modules:
 
 ```powershell
-Install-Module Microsoft.Graph.Beta.Identity.Governance -Scope CurrentUser
+Install-Module Microsoft.Graph.Authentication -Scope CurrentUser
+Install-Module Microsoft.Graph.Beta.Applications -Scope CurrentUser
 Install-Module Microsoft.Graph.Beta.Groups -Scope CurrentUser
+Install-Module Microsoft.Graph.Beta.Identity.Governance -Scope CurrentUser
 Install-Module Microsoft.Graph.Beta.Users -Scope CurrentUser
 Install-Module Microsoft.Graph.Identity.Governance -Scope CurrentUser
 ```
@@ -162,6 +166,10 @@ Get-PIMGroupAssignment -GroupId "12345678-1234-1234-1234-123456789012"
 - PIM-enabled groups are groups that have been onboarded to Privileged Identity Management for Groups.
 
 ## Changelog
+
+### Version 1.2.3
+- Added missing module dependencies: `Microsoft.Graph.Authentication`, `Microsoft.Graph.Beta.Applications`
+  - Required for `Invoke-MgGraphRequest` and `Get-MgBetaServicePrincipal` cmdlets
 
 ### Version 1.2.2
 - Performance improvement: Replaced generic arrays and hashtables with strongly-typed generic collections
