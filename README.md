@@ -163,6 +163,11 @@ Get-PIMGroupAssignment -GroupId "12345678-1234-1234-1234-123456789012"
 
 ## Changelog
 
+### Version 1.2.2
+- Performance improvement: Replaced generic arrays and hashtables with strongly-typed generic collections
+  - Lists use `System.Collections.Generic.List[T]` instead of `@()` arrays
+  - Dictionaries use `System.Collections.Generic.Dictionary[TKey,TValue]` instead of `@{}` hashtables
+
 ### Version 1.2.1
 - Initial public release to GitHub
 

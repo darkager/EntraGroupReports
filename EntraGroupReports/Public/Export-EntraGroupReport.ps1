@@ -120,13 +120,13 @@ function Export-EntraGroupReport {
         $detailPath = "$OutputPath-Report.csv"
 
         # Cache for resolved principal info
-        $principalCache = @{}
+        $principalCache = New-Object -TypeName "System.Collections.Generic.Dictionary[[String],[PSCustomObject]]"
 
         # Cache for group transitive members
-        $groupMemberCache = @{}
+        $groupMemberCache = New-Object -TypeName "System.Collections.Generic.Dictionary[[String],[System.Collections.Generic.List[PSCustomObject]]]"
 
         # Cache for PIM-enabled group IDs
-        $pimEnabledGroupIds = @{}
+        $pimEnabledGroupIds = New-Object -TypeName "System.Collections.Generic.Dictionary[[String],[bool]]"
 
         # Helper function to resolve principal details
         function Get-PrincipalInfo {
@@ -177,7 +177,7 @@ function Export-EntraGroupReport {
                 }
             }
 
-            $principalCache[$PrincipalId] = $result
+            $principalCache.Add($PrincipalId, $result)
             return $result
         }
 
@@ -192,7 +192,7 @@ function Export-EntraGroupReport {
                 return $groupMemberCache[$GroupId]
             }
 
-            $members = @()
+            $members = New-Object -TypeName "System.Collections.Generic.List[PSCustomObject]"
 
             try {
                 Write-Verbose "Fetching transitive members for group: $GroupId ($GroupDisplayName)"
@@ -234,15 +234,15 @@ function Export-EntraGroupReport {
                     }
 
                     if ($odataType -ne '#microsoft.graph.group') {
-                        $members += $memberInfo
+                        $members.Add($memberInfo)
 
                         # Cache for later lookups
                         if (-not $principalCache.ContainsKey($member.Id)) {
-                            $principalCache[$member.Id] = [PSCustomObject]@{
+                            $principalCache.Add($member.Id, [PSCustomObject]@{
                                 DisplayName       = $memberInfo.DisplayName
                                 UserPrincipalName = $memberInfo.UserPrincipalName
                                 Type              = $memberInfo.Type
-                            }
+                            })
                         }
                     }
                 }
@@ -251,7 +251,7 @@ function Export-EntraGroupReport {
                 Write-Warning "Could not retrieve transitive members for group $GroupId : $_"
             }
 
-            $groupMemberCache[$GroupId] = $members
+            $groupMemberCache.Add($GroupId, $members)
             return $members
         }
 
@@ -301,7 +301,7 @@ function Export-EntraGroupReport {
                     Write-Verbose "Building PIM-enabled groups cache..."
                     $pimGroups = Get-PIMGroups -EnrichWithDetails:$false -IncludePIMData:$false -ErrorAction Stop
                     foreach ($pg in $pimGroups) {
-                        $pimEnabledGroupIds[$pg.Id] = $true
+                        $pimEnabledGroupIds.Add($pg.Id, $true)
                     }
                 }
                 catch {
@@ -312,21 +312,21 @@ function Export-EntraGroupReport {
             return $pimEnabledGroupIds.ContainsKey($GroupId)
         }
 
-        $summaryData = @()
-        $detailData = @()
+        $summaryData = New-Object -TypeName "System.Collections.Generic.List[PSCustomObject]"
+        $detailData = New-Object -TypeName "System.Collections.Generic.List[PSCustomObject]"
     }
 
     process {
         try {
             # Get list of groups to process
-            $groupsToProcess = @()
+            $groupsToProcess = New-Object -TypeName "System.Collections.Generic.List[Microsoft.Graph.Beta.PowerShell.Models.MicrosoftGraphGroup]"
 
             if ($GroupIds) {
                 Write-Verbose "Processing specified group IDs: $($GroupIds.Count) groups"
                 foreach ($id in $GroupIds) {
                     try {
                         $group = Get-MgBetaGroup -GroupId $id -Property Id, DisplayName, Description, Mail, GroupTypes, SecurityEnabled, MailEnabled, IsAssignableToRole, MembershipRule -ErrorAction Stop
-                        $groupsToProcess += $group
+                        $groupsToProcess.Add($group)
                     }
                     catch {
                         Write-Warning "Could not retrieve group $id : $_"
@@ -335,7 +335,10 @@ function Export-EntraGroupReport {
             }
             else {
                 Write-Verbose "Fetching all groups from tenant"
-                $groupsToProcess = Get-MgBetaGroup -All -Property Id, DisplayName, Description, Mail, GroupTypes, SecurityEnabled, MailEnabled, IsAssignableToRole, MembershipRule -ErrorAction Stop
+                $allGroups = Get-MgBetaGroup -All -Property Id, DisplayName, Description, Mail, GroupTypes, SecurityEnabled, MailEnabled, IsAssignableToRole, MembershipRule -ErrorAction Stop
+                foreach ($g in $allGroups) {
+                    $groupsToProcess.Add($g)
+                }
             }
 
             Write-Verbose "Processing $($groupsToProcess.Count) groups"
@@ -384,7 +387,7 @@ function Export-EntraGroupReport {
                                 }
                             }
 
-                            $detailData += [PSCustomObject]@{
+                            $detailData.Add([PSCustomObject]@{
                                 GroupId                     = $group.Id
                                 GroupDisplayName            = $group.DisplayName
                                 GroupType                   = $groupType
@@ -415,14 +418,14 @@ function Export-EntraGroupReport {
                                 TransitiveMemberType        = $null
                                 StartDateTime               = $null
                                 EndDateTime                 = $null
-                            }
+                            })
 
                             # Expand nested group members
                             if ($ExpandGroupMembers -and $principalType -eq 'Group') {
                                 $nestedMembers = Get-GroupTransitiveMembers -GroupId $member.Id -GroupDisplayName $member.AdditionalProperties.displayName
 
                                 foreach ($nestedMember in $nestedMembers) {
-                                    $detailData += [PSCustomObject]@{
+                                    $detailData.Add([PSCustomObject]@{
                                         GroupId                     = $group.Id
                                         GroupDisplayName            = $group.DisplayName
                                         GroupType                   = $groupType
@@ -453,7 +456,7 @@ function Export-EntraGroupReport {
                                         TransitiveMemberType        = $nestedMember.Type
                                         StartDateTime               = $null
                                         EndDateTime                 = $null
-                                    }
+                                    })
                                 }
                             }
                         }
@@ -482,7 +485,7 @@ function Export-EntraGroupReport {
                                 }
                             }
 
-                            $detailData += [PSCustomObject]@{
+                            $detailData.Add([PSCustomObject]@{
                                 GroupId                     = $group.Id
                                 GroupDisplayName            = $group.DisplayName
                                 GroupType                   = $groupType
@@ -513,7 +516,7 @@ function Export-EntraGroupReport {
                                 TransitiveMemberType        = $null
                                 StartDateTime               = $null
                                 EndDateTime                 = $null
-                            }
+                            })
                         }
                     }
                     catch {
@@ -530,7 +533,7 @@ function Export-EntraGroupReport {
                         foreach ($assignment in $roleData.ActiveAssignments) {
                             $directoryRoleCount++
 
-                            $detailData += [PSCustomObject]@{
+                            $detailData.Add([PSCustomObject]@{
                                 GroupId                     = $group.Id
                                 GroupDisplayName            = $group.DisplayName
                                 GroupType                   = $groupType
@@ -561,14 +564,14 @@ function Export-EntraGroupReport {
                                 TransitiveMemberType        = $null
                                 StartDateTime               = $null
                                 EndDateTime                 = $null
-                            }
+                            })
                         }
 
                         # Eligibility schedules
                         foreach ($schedule in $roleData.EligibilitySchedules) {
                             $directoryRoleCount++
 
-                            $detailData += [PSCustomObject]@{
+                            $detailData.Add([PSCustomObject]@{
                                 GroupId                     = $group.Id
                                 GroupDisplayName            = $group.DisplayName
                                 GroupType                   = $groupType
@@ -599,14 +602,14 @@ function Export-EntraGroupReport {
                                 TransitiveMemberType        = $null
                                 StartDateTime               = $schedule.StartDateTime
                                 EndDateTime                 = $schedule.EndDateTime
-                            }
+                            })
                         }
 
                         # Assignment schedules
                         foreach ($schedule in $roleData.AssignmentSchedules) {
                             $directoryRoleCount++
 
-                            $detailData += [PSCustomObject]@{
+                            $detailData.Add([PSCustomObject]@{
                                 GroupId                     = $group.Id
                                 GroupDisplayName            = $group.DisplayName
                                 GroupType                   = $groupType
@@ -637,7 +640,7 @@ function Export-EntraGroupReport {
                                 TransitiveMemberType        = $null
                                 StartDateTime               = $schedule.StartDateTime
                                 EndDateTime                 = $schedule.EndDateTime
-                            }
+                            })
                         }
                     }
                     catch {
@@ -658,7 +661,7 @@ function Export-EntraGroupReport {
                             if ($schedule.AccessId -eq 'member') { $pimEligibleMembers++ }
                             elseif ($schedule.AccessId -eq 'owner') { $pimEligibleOwners++ }
 
-                            $detailData += [PSCustomObject]@{
+                            $detailData.Add([PSCustomObject]@{
                                 GroupId                     = $group.Id
                                 GroupDisplayName            = $group.DisplayName
                                 GroupType                   = $groupType
@@ -689,14 +692,14 @@ function Export-EntraGroupReport {
                                 TransitiveMemberType        = $null
                                 StartDateTime               = $schedule.ScheduleInfo.StartDateTime
                                 EndDateTime                 = $schedule.ScheduleInfo.Expiration.EndDateTime
-                            }
+                            })
 
                             # Expand group members if requested
                             if ($ExpandGroupMembers -and $principal.Type -eq 'Group') {
                                 $groupMembers = Get-GroupTransitiveMembers -GroupId $schedule.PrincipalId -GroupDisplayName $principal.DisplayName
 
                                 foreach ($member in $groupMembers) {
-                                    $detailData += [PSCustomObject]@{
+                                    $detailData.Add([PSCustomObject]@{
                                         GroupId                     = $group.Id
                                         GroupDisplayName            = $group.DisplayName
                                         GroupType                   = $groupType
@@ -727,7 +730,7 @@ function Export-EntraGroupReport {
                                         TransitiveMemberType        = $member.Type
                                         StartDateTime               = $schedule.ScheduleInfo.StartDateTime
                                         EndDateTime                 = $schedule.ScheduleInfo.Expiration.EndDateTime
-                                    }
+                                    })
                                 }
                             }
                         }
@@ -740,7 +743,7 @@ function Export-EntraGroupReport {
                             if ($schedule.AccessId -eq 'member') { $pimAssignedMembers++ }
                             elseif ($schedule.AccessId -eq 'owner') { $pimAssignedOwners++ }
 
-                            $detailData += [PSCustomObject]@{
+                            $detailData.Add([PSCustomObject]@{
                                 GroupId                     = $group.Id
                                 GroupDisplayName            = $group.DisplayName
                                 GroupType                   = $groupType
@@ -771,14 +774,14 @@ function Export-EntraGroupReport {
                                 TransitiveMemberType        = $null
                                 StartDateTime               = $schedule.ScheduleInfo.StartDateTime
                                 EndDateTime                 = $schedule.ScheduleInfo.Expiration.EndDateTime
-                            }
+                            })
 
                             # Expand group members if requested
                             if ($ExpandGroupMembers -and $principal.Type -eq 'Group') {
                                 $groupMembers = Get-GroupTransitiveMembers -GroupId $schedule.PrincipalId -GroupDisplayName $principal.DisplayName
 
                                 foreach ($member in $groupMembers) {
-                                    $detailData += [PSCustomObject]@{
+                                    $detailData.Add([PSCustomObject]@{
                                         GroupId                     = $group.Id
                                         GroupDisplayName            = $group.DisplayName
                                         GroupType                   = $groupType
@@ -809,7 +812,7 @@ function Export-EntraGroupReport {
                                         TransitiveMemberType        = $member.Type
                                         StartDateTime               = $schedule.ScheduleInfo.StartDateTime
                                         EndDateTime                 = $schedule.ScheduleInfo.Expiration.EndDateTime
-                                    }
+                                    })
                                 }
                             }
                         }
@@ -819,7 +822,7 @@ function Export-EntraGroupReport {
                             $principal = Get-PrincipalInfo -PrincipalId $instance.PrincipalId
                             $isPermanent = $null -eq $instance.EndDateTime
 
-                            $detailData += [PSCustomObject]@{
+                            $detailData.Add([PSCustomObject]@{
                                 GroupId                     = $group.Id
                                 GroupDisplayName            = $group.DisplayName
                                 GroupType                   = $groupType
@@ -850,14 +853,14 @@ function Export-EntraGroupReport {
                                 TransitiveMemberType        = $null
                                 StartDateTime               = $instance.StartDateTime
                                 EndDateTime                 = $instance.EndDateTime
-                            }
+                            })
 
                             # Expand group members if requested
                             if ($ExpandGroupMembers -and $principal.Type -eq 'Group') {
                                 $groupMembers = Get-GroupTransitiveMembers -GroupId $instance.PrincipalId -GroupDisplayName $principal.DisplayName
 
                                 foreach ($member in $groupMembers) {
-                                    $detailData += [PSCustomObject]@{
+                                    $detailData.Add([PSCustomObject]@{
                                         GroupId                     = $group.Id
                                         GroupDisplayName            = $group.DisplayName
                                         GroupType                   = $groupType
@@ -888,7 +891,7 @@ function Export-EntraGroupReport {
                                         TransitiveMemberType        = $member.Type
                                         StartDateTime               = $instance.StartDateTime
                                         EndDateTime                 = $instance.EndDateTime
-                                    }
+                                    })
                                 }
                             }
                         }
@@ -898,7 +901,7 @@ function Export-EntraGroupReport {
                             $principal = Get-PrincipalInfo -PrincipalId $instance.PrincipalId
                             $isPermanent = $null -eq $instance.EndDateTime
 
-                            $detailData += [PSCustomObject]@{
+                            $detailData.Add([PSCustomObject]@{
                                 GroupId                     = $group.Id
                                 GroupDisplayName            = $group.DisplayName
                                 GroupType                   = $groupType
@@ -929,14 +932,14 @@ function Export-EntraGroupReport {
                                 TransitiveMemberType        = $null
                                 StartDateTime               = $instance.StartDateTime
                                 EndDateTime                 = $instance.EndDateTime
-                            }
+                            })
 
                             # Expand group members if requested
                             if ($ExpandGroupMembers -and $principal.Type -eq 'Group') {
                                 $groupMembers = Get-GroupTransitiveMembers -GroupId $instance.PrincipalId -GroupDisplayName $principal.DisplayName
 
                                 foreach ($member in $groupMembers) {
-                                    $detailData += [PSCustomObject]@{
+                                    $detailData.Add([PSCustomObject]@{
                                         GroupId                     = $group.Id
                                         GroupDisplayName            = $group.DisplayName
                                         GroupType                   = $groupType
@@ -967,7 +970,7 @@ function Export-EntraGroupReport {
                                         TransitiveMemberType        = $member.Type
                                         StartDateTime               = $instance.StartDateTime
                                         EndDateTime                 = $instance.EndDateTime
-                                    }
+                                    })
                                 }
                             }
                         }
@@ -978,7 +981,7 @@ function Export-EntraGroupReport {
                 }
 
                 # Add summary row
-                $summaryData += [PSCustomObject]@{
+                $summaryData.Add([PSCustomObject]@{
                     GroupId              = $group.Id
                     DisplayName          = $group.DisplayName
                     GroupType            = $groupType
@@ -994,7 +997,7 @@ function Export-EntraGroupReport {
                     PIMEligible_Owners   = $pimEligibleOwners
                     PIMAssigned_Members  = $pimAssignedMembers
                     PIMAssigned_Owners   = $pimAssignedOwners
-                }
+                })
             }
 
             Write-Progress -Activity "Processing Groups" -Completed

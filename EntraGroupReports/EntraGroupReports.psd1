@@ -3,7 +3,7 @@
     RootModule        = 'EntraGroupReports.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '1.2.1'
+    ModuleVersion     = '1.2.2'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Core', 'Desktop')
@@ -86,6 +86,11 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = @'
+## Version 1.2.2
+- Performance improvement: Replaced generic arrays and hashtables with strongly-typed generic collections
+  - Lists use System.Collections.Generic.List[T] instead of @() arrays
+  - Dictionaries use System.Collections.Generic.Dictionary[TKey,TValue] instead of @{} hashtables
+
 ## Version 1.2.1
 - Initial public release to GitHub
 
