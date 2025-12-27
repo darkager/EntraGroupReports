@@ -131,6 +131,28 @@ The detail report uses a `RecordCategory` column to distinguish record types:
 - **DirectoryRole** - Directory roles assigned to the group
 - **PIMAccess** - PIM eligibility and assignment records
 
+### Sample Output
+
+**Summary Report** (`*-Summary.csv`):
+
+| GroupId | DisplayName | GroupType | MembershipType | IsPIMEnabled | MemberCount | OwnerCount | DirectoryRoleCount | PIMEligible_Members |
+|---------|-------------|-----------|----------------|--------------|-------------|------------|-------------------|---------------------|
+| abc-123... | IT Admins | Security | Assigned | True | 15 | 2 | 3 | 5 |
+| def-456... | HR Team | M365 | DynamicUser | False | 42 | 3 | 0 | 0 |
+| ghi-789... | Global Admins | Security | Assigned | True | 3 | 1 | 1 | 2 |
+
+**Detail Report** (`*-Report.csv`):
+
+| GroupId | GroupDisplayName | RecordCategory | RecordType | PrincipalDisplayName | PrincipalType | AccessType | RoleDisplayName | StartDateTime | EndDateTime |
+|---------|------------------|----------------|------------|---------------------|---------------|------------|-----------------|---------------|-------------|
+| abc-123... | IT Admins | Membership | DirectMember | John Smith | User | member | | | |
+| abc-123... | IT Admins | Membership | Owner | Jane Doe | User | owner | | | |
+| abc-123... | IT Admins | DirectoryRole | ActiveAssignment | | | | User Administrator | | |
+| abc-123... | IT Admins | PIMAccess | EligibilitySchedule | Alex Johnson | User | member | | 2024-01-01 | 2024-12-31 |
+| abc-123... | IT Admins | PIMAccess | AssignmentInstance | Service Account | ServicePrincipal | member | | 2024-06-01 | |
+
+> **Note:** Large environments can generate substantial reports. One environment produced over 250,000 rows in the detail report. Use `-IncludePIMData:$false` and `-IncludeDirectoryRoles:$false` for faster membership-only exports.
+
 ### Export PIM-Only Report
 
 ```powershell
@@ -167,6 +189,10 @@ Get-PIMGroupAssignment -GroupId "12345678-1234-1234-1234-123456789012"
 - PIM-enabled groups are groups that have been onboarded to Privileged Identity Management for Groups.
 
 ## Changelog
+
+### Version 1.2.5
+- Added sample output tables for `Export-EntraGroupReport` summary and detail reports in documentation
+- Added note about large environment report sizes (250,000+ rows observed)
 
 ### Version 1.2.4
 - Added `PrivilegedAccess.Read.AzureADGroup` to required scopes documentation

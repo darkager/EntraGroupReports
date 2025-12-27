@@ -3,7 +3,7 @@
     RootModule        = 'EntraGroupReports.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '1.2.4'
+    ModuleVersion     = '1.2.5'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Core', 'Desktop')
@@ -88,6 +88,10 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = @'
+## Version 1.2.5
+- Added sample output tables for Export-EntraGroupReport summary and detail reports in documentation
+- Added note about large environment report sizes (250,000+ rows observed)
+
 ## Version 1.2.4
 - Added PrivilegedAccess.Read.AzureADGroup to required scopes documentation
   - Required for the legacy /privilegedAccess/aadGroups/resources endpoint used by Get-PIMGroupsLegacy
