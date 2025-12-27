@@ -3,7 +3,7 @@
     RootModule        = 'EntraGroupReports.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '1.2.3'
+    ModuleVersion     = '1.2.4'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Core', 'Desktop')
@@ -88,6 +88,10 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = @'
+## Version 1.2.4
+- Added PrivilegedAccess.Read.AzureADGroup to required scopes documentation
+  - Required for the legacy /privilegedAccess/aadGroups/resources endpoint used by Get-PIMGroupsLegacy
+
 ## Version 1.2.3
 - Added missing module dependencies: Microsoft.Graph.Authentication, Microsoft.Graph.Beta.Applications
   - Required for Invoke-MgGraphRequest and Get-MgBetaServicePrincipal cmdlets

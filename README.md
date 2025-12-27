@@ -45,6 +45,7 @@ Connect-MgGraph -Scopes @(
     'User.Read.All',
     'Application.Read.All',
     'RoleManagement.Read.Directory',
+    'PrivilegedAccess.Read.AzureADGroup',
     'PrivilegedEligibilitySchedule.Read.AzureADGroup',
     'PrivilegedAssignmentSchedule.Read.AzureADGroup'
 )
@@ -166,6 +167,10 @@ Get-PIMGroupAssignment -GroupId "12345678-1234-1234-1234-123456789012"
 - PIM-enabled groups are groups that have been onboarded to Privileged Identity Management for Groups.
 
 ## Changelog
+
+### Version 1.2.4
+- Added `PrivilegedAccess.Read.AzureADGroup` to required scopes documentation
+  - Required for the legacy `/privilegedAccess/aadGroups/resources` endpoint used by `Get-PIMGroupsLegacy`
 
 ### Version 1.2.3
 - Added missing module dependencies: `Microsoft.Graph.Authentication`, `Microsoft.Graph.Beta.Applications`
