@@ -153,6 +153,57 @@ The detail report uses a `RecordCategory` column to distinguish record types:
 
 > **Note:** Large environments can generate substantial reports. One environment produced over 250,000 rows in the detail report. Use `-IncludePIMData:$false` and `-IncludeDirectoryRoles:$false` for faster membership-only exports.
 
+## Performance
+
+### Strongly-Typed Collections
+
+This module uses strongly-typed .NET generic collections instead of PowerShell's native arrays and hashtables for improved performance in large environments.
+
+**Why this matters:** PowerShell arrays (`@()`) are immutable. Every `+=` operation creates a new array, copies all existing elements, and adds the new item. This becomes exponentially slower as the collection grows. In environments with 250,000+ records, this can cause significant delays.
+
+**Collections used:**
+
+| PowerShell Native | .NET Generic Replacement | Use Case |
+|-------------------|--------------------------|----------|
+| `@()` with `+=` | `System.Collections.Generic.List[T]` | Report data rows, group members |
+| `@{}` | `System.Collections.Generic.Dictionary[TKey,TValue]` | Principal cache, group member cache, PIM-enabled group lookup |
+
+**Example - Array vs List:**
+
+```powershell
+# Slow - creates new array on each iteration
+$data = @()
+foreach ($item in $items) {
+    $data += [PSCustomObject]@{ Name = $item }  # O(n) copy each time
+}
+
+# Fast - appends in-place
+$data = New-Object -TypeName "System.Collections.Generic.List[PSCustomObject]"
+foreach ($item in $items) {
+    $data.Add([PSCustomObject]@{ Name = $item })  # O(1) amortized
+}
+```
+
+**Example - Hashtable vs Dictionary:**
+
+```powershell
+# Standard PowerShell hashtable
+$cache = @{}
+$cache[$key] = $value
+
+# Strongly-typed dictionary with better performance for large datasets
+$cache = New-Object -TypeName "System.Collections.Generic.Dictionary[[String],[PSCustomObject]]"
+$cache.Add($key, $value)
+```
+
+**Types used in this module:**
+
+- `List[PSCustomObject]` - Summary data, detail data, group members
+- `List[Microsoft.Graph.Beta.PowerShell.Models.MicrosoftGraphGroup]` - Groups to process
+- `Dictionary[[String],[PSCustomObject]]` - Principal info cache
+- `Dictionary[[String],[List[PSCustomObject]]]` - Group transitive member cache
+- `Dictionary[[String],[bool]]` - PIM-enabled group ID lookup
+
 ### Export PIM-Only Report
 
 ```powershell
@@ -189,6 +240,10 @@ Get-PIMGroupAssignment -GroupId "12345678-1234-1234-1234-123456789012"
 - PIM-enabled groups are groups that have been onboarded to Privileged Identity Management for Groups.
 
 ## Changelog
+
+### Version 1.2.6
+- Added Performance section to README documenting strongly-typed collections
+- Added detailed Performance Considerations section to research.md with code examples and usage patterns
 
 ### Version 1.2.5
 - Added sample output tables for `Export-EntraGroupReport` summary and detail reports in documentation

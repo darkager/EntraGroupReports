@@ -3,13 +3,13 @@
     RootModule        = 'EntraGroupReports.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '1.2.5'
+    ModuleVersion     = '1.2.6'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Core', 'Desktop')
 
     # ID used to uniquely identify this module
-    GUID              = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+    GUID              = '9105a94d-a978-4b99-98d3-600accf56f05'
 
     # Author of this module
     Author            = 'EntraGroupReports Project'
@@ -88,6 +88,10 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = @'
+## Version 1.2.6
+- Added Performance section to README documenting strongly-typed collections
+- Added detailed Performance Considerations section to research.md with code examples and usage patterns
+
 ## Version 1.2.5
 - Added sample output tables for Export-EntraGroupReport summary and detail reports in documentation
 - Added note about large environment report sizes (250,000+ rows observed)
