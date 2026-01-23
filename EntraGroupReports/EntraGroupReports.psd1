@@ -3,7 +3,7 @@
     RootModule        = 'EntraGroupReports.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '1.2.6'
+    ModuleVersion     = '1.2.7'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Core', 'Desktop')
@@ -43,7 +43,6 @@
         'Get-PIMGroup',
         'Get-PIMGroups',
         'Get-PIMGroupsLegacy',
-        'Export-PIMGroupReport',
         'Get-GroupDirectoryRoles',
         'Export-EntraGroupReport'
     )
@@ -66,7 +65,6 @@
         'Public\Get-PIMGroup.ps1',
         'Public\Get-PIMGroups.ps1',
         'Public\Get-PIMGroupsLegacy.ps1',
-        'Public\Export-PIMGroupReport.ps1',
         'Public\Get-GroupDirectoryRoles.ps1',
         'Public\Export-EntraGroupReport.ps1'
     )
@@ -88,6 +86,11 @@
 
             # ReleaseNotes of this module
             ReleaseNotes = @'
+## Version 1.2.7
+- Remove deprecated Export-PIMGroupReport function (superseded by Export-EntraGroupReport)
+- Add MembershipRule column to summary report for dynamic group filter expressions
+- Restructure README with table of contents and anchor links
+
 ## Version 1.2.6
 - Added Performance section to README documenting strongly-typed collections
 - Added detailed Performance Considerations section to research.md with code examples and usage patterns
@@ -132,7 +135,6 @@
 - Get-PIMGroup: Composite function for retrieving full PIM data for a single group
 - Get-PIMGroups: List all PIM-enabled groups using the new identityGovernance API (Global cloud only)
 - Get-PIMGroupsLegacy: List all PIM-enabled groups using the legacy privilegedAccess API (deprecated Oct 2026)
-- Export-PIMGroupReport: Generate comprehensive CSV report of all PIM group data with resolved principal names
 '@
 
             # Prerelease string of this module (remove for production release)

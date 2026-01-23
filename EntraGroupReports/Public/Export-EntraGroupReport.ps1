@@ -986,6 +986,7 @@ function Export-EntraGroupReport {
                     DisplayName          = $group.DisplayName
                     GroupType            = $groupType
                     MembershipType       = $membershipType
+                    MembershipRule       = $group.MembershipRule
                     SecurityEnabled      = $group.SecurityEnabled
                     MailEnabled          = $group.MailEnabled
                     IsAssignableToRole   = $isRoleAssignable

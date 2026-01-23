@@ -2,7 +2,30 @@
 
 PowerShell module for reporting on Microsoft Entra ID groups. Provides functions to query and report on group membership, directory role assignments, and Privileged Identity Management (PIM) eligibility and assignments.
 
-## Requirements
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+  - [Required Permissions](#required-permissions)
+- [Installation](#installation)
+- [Connection](#connection)
+- [Export Commands](#export-commands)
+  - [Export-EntraGroupReport](#export-entragroupreport)
+  - [Summary Report Columns](#summary-report-columns)
+  - [Detail Report](#detail-report)
+  - [Sample Output](#sample-output)
+- [Other Functions](#other-functions)
+  - [Get-PIMGroup](#get-pimgroup)
+  - [Get-PIMGroups](#get-pimgroups)
+  - [Get-PIMGroupsLegacy](#get-pimgroupslegacy)
+  - [Get-GroupDirectoryRoles](#get-groupdirectoryroles)
+  - [Get-PIMGroupEligibility](#get-pimgroupeligibility)
+  - [Get-PIMGroupAssignment](#get-pimgroupassignment)
+- [Performance](#performance)
+- [Notes](#notes)
+- [Changelog](#changelog)
+- [License](#license)
+
+## Prerequisites
 
 - PowerShell 5.1 or later (PowerShell 7+ recommended)
 - Microsoft Graph PowerShell SDK modules:
@@ -12,6 +35,19 @@ PowerShell module for reporting on Microsoft Entra ID groups. Provides functions
   - `Microsoft.Graph.Beta.Identity.Governance`
   - `Microsoft.Graph.Beta.Users`
   - `Microsoft.Graph.Identity.Governance`
+
+### Required Permissions
+
+| Scope | Required For |
+|-------|--------------|
+| `Group.Read.All` | Reading group information |
+| `GroupMember.Read.All` | Reading group membership |
+| `User.Read.All` | Resolving user display names |
+| `Application.Read.All` | Resolving service principal names |
+| `RoleManagement.Read.Directory` | Reading directory role assignments |
+| `PrivilegedAccess.Read.AzureADGroup` | Legacy PIM group discovery |
+| `PrivilegedEligibilitySchedule.Read.AzureADGroup` | Reading PIM eligibility data |
+| `PrivilegedAssignmentSchedule.Read.AzureADGroup` | Reading PIM assignment data |
 
 ## Installation
 
@@ -34,7 +70,7 @@ Install-Module Microsoft.Graph.Identity.Governance -Scope CurrentUser
 Import-Module .\EntraGroupReports\EntraGroupReports.psd1
 ```
 
-## Authentication
+## Connection
 
 Connect to Microsoft Graph with the required scopes before using the module:
 
@@ -59,31 +95,11 @@ For membership-only reporting (no PIM or directory roles):
 Connect-MgGraph -Scopes 'Group.Read.All', 'GroupMember.Read.All', 'User.Read.All'
 ```
 
-## Functions
+## Export Commands
 
-### Group Reporting
+### Export-EntraGroupReport
 
-| Function | Description |
-|----------|-------------|
-| `Export-EntraGroupReport` | Generates comprehensive CSV reports for all Entra ID groups |
-| `Get-GroupDirectoryRoles` | Gets directory role assignments for a specific group |
-
-### PIM Group Functions
-
-| Function | Description |
-|----------|-------------|
-| `Get-PIMGroupEligibility` | Gets eligibility schedules and instances for PIM groups |
-| `Get-PIMGroupAssignment` | Gets assignment schedules and instances for PIM groups |
-| `Get-PIMGroup` | Gets comprehensive PIM data for a single group |
-| `Get-PIMGroups` | Lists all PIM-enabled groups (new API) |
-| `Get-PIMGroupsLegacy` | Lists all PIM-enabled groups (legacy API, deprecated Oct 2026) |
-| `Export-PIMGroupReport` | Generates CSV report of PIM group data |
-
-## Usage Examples
-
-### Export Comprehensive Group Report
-
-Generates two CSV files: a summary and a detailed report.
+The primary export function that generates comprehensive CSV reports for all Entra ID groups. Creates two files: a summary report and a detailed report.
 
 ```powershell
 # Export all groups with full security data
@@ -111,6 +127,7 @@ Export-EntraGroupReport -ExpandGroupMembers
 | DisplayName | Group display name |
 | GroupType | M365, Security, Distribution, or Other |
 | MembershipType | Assigned, DynamicUser, or DynamicDevice |
+| MembershipRule | Dynamic membership filter expression (null for assigned groups) |
 | SecurityEnabled | Boolean |
 | MailEnabled | Boolean |
 | IsAssignableToRole | Boolean (role-assignable group) |
@@ -135,11 +152,11 @@ The detail report uses a `RecordCategory` column to distinguish record types:
 
 **Summary Report** (`*-Summary.csv`):
 
-| GroupId | DisplayName | GroupType | MembershipType | IsPIMEnabled | MemberCount | OwnerCount | DirectoryRoleCount | PIMEligible_Members |
-|---------|-------------|-----------|----------------|--------------|-------------|------------|-------------------|---------------------|
-| abc-123... | IT Admins | Security | Assigned | True | 15 | 2 | 3 | 5 |
-| def-456... | HR Team | M365 | DynamicUser | False | 42 | 3 | 0 | 0 |
-| ghi-789... | Global Admins | Security | Assigned | True | 3 | 1 | 1 | 2 |
+| GroupId | DisplayName | GroupType | MembershipType | MembershipRule | IsPIMEnabled | MemberCount |
+|---------|-------------|-----------|----------------|----------------|--------------|-------------|
+| abc-123... | IT Admins | Security | Assigned | | True | 15 |
+| def-456... | HR Team | M365 | DynamicUser | (user.department -eq "HR") | False | 42 |
+| ghi-789... | Global Admins | Security | Assigned | | True | 3 |
 
 **Detail Report** (`*-Report.csv`):
 
@@ -152,6 +169,58 @@ The detail report uses a `RecordCategory` column to distinguish record types:
 | abc-123... | IT Admins | PIMAccess | AssignmentInstance | Service Account | ServicePrincipal | member | | 2024-06-01 | |
 
 > **Note:** Large environments can generate substantial reports. One environment produced over 250,000 rows in the detail report. Use `-IncludePIMData:$false` and `-IncludeDirectoryRoles:$false` for faster membership-only exports.
+
+## Other Functions
+
+### Get-PIMGroup
+
+Gets comprehensive PIM data for a single group.
+
+```powershell
+Get-PIMGroup -GroupId "12345678-1234-1234-1234-123456789012"
+```
+
+### Get-PIMGroups
+
+Lists all PIM-enabled groups using the new identityGovernance API.
+
+```powershell
+Get-PIMGroups
+```
+
+### Get-PIMGroupsLegacy
+
+Lists all PIM-enabled groups using the legacy privilegedAccess API.
+
+> **Note:** This function uses a deprecated API that will be retired on October 28, 2026. Use `Get-PIMGroups` instead where possible.
+
+```powershell
+Get-PIMGroupsLegacy
+```
+
+### Get-GroupDirectoryRoles
+
+Gets directory role assignments for a specific group.
+
+```powershell
+Get-GroupDirectoryRoles -GroupId "12345678-1234-1234-1234-123456789012"
+```
+
+### Get-PIMGroupEligibility
+
+Gets eligibility schedules and instances for PIM groups.
+
+```powershell
+Get-PIMGroupEligibility -GroupId "12345678-1234-1234-1234-123456789012"
+```
+
+### Get-PIMGroupAssignment
+
+Gets assignment schedules and instances for PIM groups.
+
+```powershell
+Get-PIMGroupAssignment -GroupId "12345678-1234-1234-1234-123456789012"
+```
 
 ## Performance
 
@@ -204,42 +273,17 @@ $cache.Add($key, $value)
 - `Dictionary[[String],[List[PSCustomObject]]]` - Group transitive member cache
 - `Dictionary[[String],[bool]]` - PIM-enabled group ID lookup
 
-### Export PIM-Only Report
-
-```powershell
-# Export PIM data for all PIM-enabled groups
-Export-PIMGroupReport
-
-# Export with transitive group member expansion
-Export-PIMGroupReport -ExpandGroupMembers
-
-# Use legacy API for group discovery
-Export-PIMGroupReport -UseLegacyDiscovery
-```
-
-### Query Individual Groups
-
-```powershell
-# Get PIM data for a specific group
-Get-PIMGroup -GroupId "12345678-1234-1234-1234-123456789012"
-
-# Get directory roles for a group
-Get-GroupDirectoryRoles -GroupId "12345678-1234-1234-1234-123456789012"
-
-# Get PIM eligibility data
-Get-PIMGroupEligibility -GroupId "12345678-1234-1234-1234-123456789012"
-
-# Get PIM assignment data
-Get-PIMGroupAssignment -GroupId "12345678-1234-1234-1234-123456789012"
-```
-
 ## Notes
 
-- The `Get-PIMGroupsLegacy` function uses a deprecated API that will be retired on October 28, 2026. Use `Get-PIMGroups` instead where possible.
 - Role-assignable groups (`IsAssignableToRole = $true`) are required for directory role assignments.
 - PIM-enabled groups are groups that have been onboarded to Privileged Identity Management for Groups.
 
 ## Changelog
+
+### Version 1.2.7
+- Remove deprecated `Export-PIMGroupReport` function (superseded by `Export-EntraGroupReport`)
+- Add `MembershipRule` column to summary report for dynamic group filter expressions
+- Restructure README with table of contents and anchor links
 
 ### Version 1.2.6
 - Added Performance section to README documenting strongly-typed collections
@@ -285,7 +329,6 @@ Get-PIMGroupAssignment -GroupId "12345678-1234-1234-1234-123456789012"
 - Get-PIMGroup: Composite function for retrieving full PIM data for a single group
 - Get-PIMGroups: List all PIM-enabled groups using the new identityGovernance API (Global cloud only)
 - Get-PIMGroupsLegacy: List all PIM-enabled groups using the legacy privilegedAccess API (deprecated Oct 2026)
-- Export-PIMGroupReport: Generate comprehensive CSV report of all PIM group data with resolved principal names
 
 ## License
 
