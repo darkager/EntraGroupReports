@@ -110,10 +110,13 @@ function Export-EntraGroupReport {
     )
 
     begin {
-        # Set default output path if not specified
+        # Set default output path if not specified, or resolve directory to timestamped base name
+        $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
         if (-not $OutputPath) {
-            $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
             $OutputPath = Join-Path -Path (Get-Location) -ChildPath "EntraGroupReport_$timestamp"
+        }
+        elseif (Test-Path -Path $OutputPath -PathType Container) {
+            $OutputPath = Join-Path -Path $OutputPath -ChildPath "EntraGroupReport_$timestamp"
         }
 
         $summaryPath = "$OutputPath-Summary.csv"
